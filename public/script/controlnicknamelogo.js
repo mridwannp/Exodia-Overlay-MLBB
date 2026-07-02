@@ -134,31 +134,96 @@ function setupAutoSave() {
     });
 }
 
-// Handle Upload Logo
-function setupLogoUpload() {
-    document.getElementById('file1').addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentBlueLogo = e.target.result; 
-                saveToServer(); 
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+// --- LOGO PICKER (Dropdown seperti Hero Picker) ---
 
-    document.getElementById('file2').addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentRedLogo = e.target.result;
-                saveToServer();
-            };
-            reader.readAsDataURL(file);
-        }
+let allLogos = []; // Daftar semua file logo
+
+async function loadLogoList() {
+    try {
+        const response = await fetch('/database/logoteam.json');
+        allLogos = await response.json();
+        // Render preview jika logo sudah tersimpan di server
+        if (currentBlueLogo) showLogoPreview(1, currentBlueLogo);
+        if (currentRedLogo) showLogoPreview(2, currentRedLogo);
+    } catch(e) {
+        console.error('Gagal load daftar logo:', e);
+    }
+}
+
+function filterLogoPicker(side) {
+    const query = document.getElementById(`logo-search-${side}`).value.toLowerCase();
+    const dropdown = document.getElementById(`logo-dropdown-${side}`);
+    dropdown.innerHTML = '';
+
+    if (!query) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    const filtered = allLogos.filter(f => f.toLowerCase().includes(query));
+    if (filtered.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    dropdown.style.display = 'flex';
+    filtered.forEach(filename => {
+        const item = document.createElement('div');
+        item.className = 'logo-dropdown-item';
+
+        // Strip prefix number and extension for display name
+        const displayName = filename.replace(/^\d+[.,]?\s*/, '').replace('.png', '');
+        const path = `Assets/LogoTim/${encodeURIComponent(filename)}`;
+
+        const img = document.createElement('img');
+        img.src = path;
+        img.alt = displayName;
+
+        const label = document.createElement('span');
+        label.textContent = displayName;
+
+        item.appendChild(img);
+        item.appendChild(label);
+        item.onclick = () => selectLogo(side, path, displayName);
+        dropdown.appendChild(item);
     });
+}
+
+function selectLogo(side, path, displayName) {
+    if (side === 1) currentBlueLogo = path;
+    else currentRedLogo = path;
+
+    showLogoPreview(side, path, displayName);
+    document.getElementById(`logo-dropdown-${side}`).style.display = 'none';
+    document.getElementById(`logo-search-${side}`).value = '';
+    saveToServer();
+}
+
+function showLogoPreview(side, path, displayName) {
+    const img = document.getElementById(`logo-preview-${side}`);
+    const label = document.getElementById(`logo-preview-name-${side}`);
+    if (img) {
+        img.src = path;
+        img.style.display = 'block';
+    }
+    if (label && displayName) label.textContent = displayName;
+    else if (label) {
+        // Extract name from path
+        const filename = decodeURIComponent(path.split('/').pop());
+        label.textContent = filename.replace(/^\d+[.,]?\s*/, '').replace('.png', '');
+    }
+}
+
+function clearLogo(side) {
+    if (side === 1) currentBlueLogo = '';
+    else currentRedLogo = '';
+    const img = document.getElementById(`logo-preview-${side}`);
+    const label = document.getElementById(`logo-preview-name-${side}`);
+    if (img) { img.src = ''; img.style.display = 'none'; }
+    if (label) label.textContent = '';
+    document.getElementById(`logo-search-${side}`).value = '';
+    document.getElementById(`logo-dropdown-${side}`).style.display = 'none';
+    saveToServer();
 }
 
 // --- LOGIKA TOMBOL (Reset, Switch, Swap) ---
@@ -181,10 +246,10 @@ async function resetNames() {
 }
 
 async function resetImages() {
-    currentBlueLogo = "";
-    currentRedLogo = "";
-    document.getElementById('file1').value = ""; 
-    document.getElementById('file2').value = ""; 
+    currentBlueLogo = '';
+    currentRedLogo = '';
+    clearLogo(1);
+    clearLogo(2);
     await saveToServer();
 }
 
@@ -297,8 +362,8 @@ function resetSwapUI() {
 
 function initializeApp() {
     loadFromServer(); 
-    setupAutoSave(); 
-    setupLogoUpload(); 
+    setupAutoSave();
+    loadLogoList();
 }
 
 window.onload = initializeApp;

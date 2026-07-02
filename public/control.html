@@ -33,9 +33,19 @@
                     <div class="namebox">BLUESIDE AND LOGO</div>
                     <div class="name-box"><input type="text" id="name-input-1" placeholder="Nama Tim Biru"></div>
                     <div class="name-box"><input type="text" id="name-input-2" placeholder="Skor"></div>
-                    <div class="container">
-                        <label>Upload Logo Biru:</label>
-                        <input type="file" id="file1" accept="image/*">
+                    <div class="container logo-picker-container">
+                        <label>Logo Tim Biru:</label>
+                        <div class="logo-picker">
+                            <div class="logo-search-row">
+                                <input type="text" id="logo-search-1" placeholder="Cari nama tim..." oninput="filterLogoPicker(1)" autocomplete="off">
+                                <button class="swap-button" onclick="clearLogo(1)">Clear</button>
+                            </div>
+                            <div id="logo-dropdown-1" class="logo-dropdown-items"></div>
+                            <div class="logo-preview-row">
+                                <img id="logo-preview-1" src="" alt="" style="display:none;">
+                                <span id="logo-preview-name-1" class="logo-preview-label"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -107,9 +117,19 @@
                     <div class="namebox">REDSIDE AND LOGO</div>
                     <div class="name-box"><input type="text" id="name-input-8" placeholder="Nama Tim Merah"></div>
                     <div class="name-box"><input type="text" id="name-input-9" placeholder="Skor"></div>
-                    <div class="container">
-                        <label>Upload Logo Merah:</label>
-                        <input type="file" id="file2" accept="image/*">
+                    <div class="container logo-picker-container">
+                        <label>Logo Tim Merah:</label>
+                        <div class="logo-picker">
+                            <div class="logo-search-row">
+                                <input type="text" id="logo-search-2" placeholder="Cari nama tim..." oninput="filterLogoPicker(2)" autocomplete="off">
+                                <button class="swap-button" onclick="clearLogo(2)">Clear</button>
+                            </div>
+                            <div id="logo-dropdown-2" class="logo-dropdown-items"></div>
+                            <div class="logo-preview-row">
+                                <img id="logo-preview-2" src="" alt="" style="display:none;">
+                                <span id="logo-preview-name-2" class="logo-preview-label"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
