@@ -98,6 +98,12 @@ function updateDisplay(newData) {
         let imgElement = document.getElementById(`image-display-${i}`);
         let boxElement = document.getElementById(`image-box-${i}`);
         
+        // Cek apakah slot pick memiliki name-image-box (foto player)
+        let htmlId = null;
+        if (i >= 1 && i <= 5) htmlId = i + 2;
+        else if (i >= 6 && i <= 10) htmlId = i + 4;
+        let playerImgBox = htmlId ? document.getElementById(`name-image-box-${htmlId}`) : null;
+
         if (imgElement && boxElement) { 
             if (imgSrc) {
                 if (!imgElement.src.endsWith(imgSrc)) {
@@ -110,11 +116,17 @@ function updateDisplay(newData) {
                 }
                 imgElement.style.opacity = "1";
                 boxElement.classList.add("show");
+                if (playerImgBox) {
+                    playerImgBox.style.display = "none"; // Sembunyikan foto player karena hero sudah masuk
+                }
             } else {
                 imgElement.src = ""; 
                 imgElement.style.opacity = "0";
                 boxElement.classList.remove("show");
                 lastPlayed[i] = null;
+                if (playerImgBox) {
+                    playerImgBox.style.display = "flex"; // Tampilkan kembali foto player
+                }
             }
         }
     }

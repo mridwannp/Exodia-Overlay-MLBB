@@ -1,5 +1,4 @@
-// Variabel global untuk menyimpan status data terakhir (Dirty Check)
-let lastDataState = "";
+// postgame.js - Firebase Realtime Edition
 
 // Fungsi untuk mendapatkan path gambar
 function getImagePath(name, type) {
@@ -223,25 +222,30 @@ function renderBans(players, startFrameId) {
     });
 }
 
-// Fungsi Fetch Data dengan Pengecekan Perubahan (Dirty Check)
-function checkDataUpdate() {
-    fetch("database/matchdatateam.json?t=" + new Date().getTime())
-      .then(response => {
-        if (!response.ok) throw new Error(`Gagal memuat JSON: ${response.status}`);
-        return response.json();
-      })
-      .then(data => {
-        const currentDataState = JSON.stringify(data);
-        if (currentDataState !== lastDataState) {
-            lastDataState = currentDataState;
-            renderMatchData(data);
+// ==========================================
+// FIREBASE REALTIME LISTENER - Menggantikan HTTP Polling
+// ==========================================
+
+function initFirebaseSync() {
+    db.ref('matchdata').on('value', async (snapshot) => {
+        let data = snapshot.val();
+
+        // Jika Firebase kosong, inisialisasi dari JSON lokal
+        if (!data) {
+            console.log("Firebase matchdata kosong. Inisialisasi dari JSON lokal...");
+            try {
+                const response = await fetch('/database/matchdatateam.json');
+                data = await response.json();
+                await db.ref('matchdata').set(data);
+            } catch(e) {
+                console.error("Gagal inisialisasi matchdata:", e);
+                return;
+            }
         }
-      })
-      .catch(error => {
-        console.error("Error fetching data:", error);
-      });
+
+        renderMatchData(data);
+    });
 }
 
 // Inisialisasi
-checkDataUpdate();
-setInterval(checkDataUpdate, 500);
+initFirebaseSync();

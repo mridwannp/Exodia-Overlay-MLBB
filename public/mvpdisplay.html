@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MVP Display - Cyber HUD</title>
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="script/firebase-config.js"></script>
     <style>
         /* --- FONTS & VARS --- */
         @font-face { font-family: 'Big Noodle Titling'; src: url('Assets/Font/Renegade\ Pursuit.otf') format('truetype'); }
@@ -304,17 +308,7 @@
     </div>
 
     <script>
-        const socket = new WebSocket(`ws://${window.location.host}`);
         const mainDisplay = document.getElementById('main-display');
-
-        function fetchAndDisplayMvp() {
-            fetch('/api/mvp')
-                .then(response => response.json())
-                .then(data => {
-                    updateMvpDisplay(data.mvp);
-                })
-                .catch(err => console.error("Gagal load MVP:", err));
-        }
 
         function updateMvpDisplay(mvpData) {
             if (!mvpData) {
@@ -340,9 +334,22 @@
             const spellContainer = document.getElementById('mvp-spell-container');
             const itemsContainer = document.getElementById('mvp-items-container');
 
-            // Data injection with minimal safety checks
-            heroImg.src = mvpData.heroImg || '';
-            playerPhotoImg.src = mvpData.playerPhoto || 'Assets/player/noplayer.png';
+            // Hero image: heroImg sudah berupa nama hero (tanpa path)
+            if (mvpData.heroImg && mvpData.heroImg !== '') {
+                heroImg.src = `Assets/HeroPick/${mvpData.heroImg}.png`;
+            } else {
+                heroImg.src = 'Assets/HeroPick/idle.png';
+            }
+
+            // Player photo: playerPhoto berupa nama file tanpa .png
+            if (mvpData.playerPhoto && mvpData.playerPhoto !== '') {
+                const photoSrc = `Assets/player/${mvpData.playerPhoto}.png`;
+                playerPhotoImg.src = photoSrc;
+                playerPhotoImg.onerror = () => { playerPhotoImg.src = 'Assets/player/noplayer.png'; };
+            } else {
+                playerPhotoImg.src = 'Assets/player/noplayer.png';
+            }
+
             nicknameEl.textContent = mvpData.nickname || 'PLAYER';
             lvlEl.textContent = mvpData.stats.LVL || '1';
             kdaEl.textContent = mvpData.stats.KDA || '0/0/0';
@@ -373,16 +380,15 @@
 
             // Retrigger Animation (Glitches text)
             nicknameEl.classList.remove('glitch-anim');
-            void nicknameEl.offsetWidth; // trigger reflow
+            void nicknameEl.offsetWidth;
             nicknameEl.classList.add('glitch-anim');
         }
 
-        socket.onopen = () => { console.log("WS Connected"); fetchAndDisplayMvp(); };
-        socket.onmessage = (e) => {
-            const msg = JSON.parse(e.data);
-            if(msg.type === 'mvp_update') updateMvpDisplay(msg.data);
-        };
-        socket.onclose = () => setTimeout(() => window.location.reload(), 3000);
+        // Firebase Realtime Listener — menggantikan WebSocket
+        db.ref('mvpdata').on('value', (snapshot) => {
+            const data = snapshot.val();
+            updateMvpDisplay(data ? data.mvp : null);
+        });
     </script>
 </body>
 </html>

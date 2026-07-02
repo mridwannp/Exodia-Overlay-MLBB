@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exodia MLBB Overlay — Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg: #080a0f;
@@ -20,7 +22,12 @@
             --orange: #f97316;
             --yellow: #eab308;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background: var(--bg);
@@ -34,37 +41,67 @@
         }
 
         .glow {
-            position: fixed; width: 700px; height: 700px;
-            background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, rgba(6,182,212,0.04) 55%, transparent 100%);
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            filter: blur(100px); pointer-events: none; z-index: 0;
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(6, 182, 212, 0.04) 55%, transparent 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .wrapper {
-            position: relative; z-index: 1;
-            max-width: 1100px; width: 100%;
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            width: 100%;
             padding: 40px 24px;
         }
 
-        header { text-align: center; margin-bottom: 48px; }
+        header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
         header h1 {
-            font-size: 2.8rem; font-weight: 800;
-            letter-spacing: -0.05em; text-transform: uppercase;
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
             background: linear-gradient(135deg, #fff 20%, var(--cyan) 60%, var(--purple) 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 12px;
         }
-        header p { color: var(--muted); font-size: 1rem; }
+
+        header p {
+            color: var(--muted);
+            font-size: 1rem;
+        }
 
         /* Section labels */
         .section-label {
-            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
-            text-transform: uppercase; color: var(--muted);
-            margin-bottom: 12px; margin-top: 28px;
-            display: flex; align-items: center; gap: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+            margin-top: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .section-label::before, .section-label::after {
-            content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06);
+
+        .section-label::before,
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .grid {
@@ -80,66 +117,129 @@
             padding: 24px 20px;
             backdrop-filter: blur(16px);
             cursor: pointer;
-            text-decoration: none; color: inherit;
-            display: flex; flex-direction: column; align-items: center;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
-            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, box-shadow 0.3s;
-            position: relative; overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
         }
+
         .card:hover {
             transform: translateY(-6px);
             border-color: var(--card-hover);
-            box-shadow: 0 10px 35px rgba(168,85,247,0.12);
+            box-shadow: 0 10px 35px rgba(168, 85, 247, 0.12);
         }
+
         .card-icon {
-            font-size: 2rem; margin-bottom: 14px;
-            width: 60px; height: 60px;
+            font-size: 2rem;
+            margin-bottom: 14px;
+            width: 60px;
+            height: 60px;
             border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             transition: transform 0.3s;
         }
-        .card:hover .card-icon { transform: scale(1.12) rotate(3deg); }
-        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
-        .card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+        .card:hover .card-icon {
+            transform: scale(1.12) rotate(3deg);
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
 
         /* Color Accents */
-        .c-purple .card-icon { color: var(--purple); }
-        .c-cyan   .card-icon { color: var(--cyan); }
-        .c-green  .card-icon { color: var(--green); }
-        .c-red    .card-icon { color: var(--red); }
-        .c-orange .card-icon { color: var(--orange); }
-        .c-yellow .card-icon { color: var(--yellow); }
+        .c-purple .card-icon {
+            color: var(--purple);
+        }
+
+        .c-cyan .card-icon {
+            color: var(--cyan);
+        }
+
+        .c-green .card-icon {
+            color: var(--green);
+        }
+
+        .c-red .card-icon {
+            color: var(--red);
+        }
+
+        .c-orange .card-icon {
+            color: var(--orange);
+        }
+
+        .c-yellow .card-icon {
+            color: var(--yellow);
+        }
 
         footer {
-            margin-top: 56px; text-align: center;
-            font-size: 0.78rem; color: var(--muted);
-            display: flex; align-items: center; justify-content: center; gap: 14px;
+            margin-top: 56px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
         }
+
         .badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 4px 12px; border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 4px 12px;
+            border-radius: 999px;
         }
+
         .dot {
-            width: 6px; height: 6px; background: var(--green);
-            border-radius: 50%; box-shadow: 0 0 6px var(--green);
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--green);
             animation: pulse 2s infinite;
         }
+
         @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.3); opacity: 1; }
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="glow"></div>
     <div class="wrapper">
         <header>
             <h1>Exodia Overlay MLBB</h1>
-            <p>Panel navigasi pusat untuk semua halaman overlay.</p>
         </header>
 
         <!-- Main Pages -->
@@ -148,17 +248,14 @@
             <a href="control.html" class="card c-purple">
                 <div class="card-icon">🎛️</div>
                 <div class="card-title">Control Panel</div>
-                <div class="card-desc">Atur draft pick/ban, nickname, skor, dan logo tim secara realtime.</div>
             </a>
             <a href="display2.html" class="card c-cyan">
                 <div class="card-icon">📺</div>
                 <div class="card-title">Draft Overlay</div>
-                <div class="card-desc">Tampilan utama overlay pick & ban hero live untuk OBS.</div>
             </a>
             <a href="postdraft2.html" class="card c-green">
                 <div class="card-icon">📊</div>
                 <div class="card-title">Post-Draft</div>
-                <div class="card-desc">Display post-draft setelah seluruh hero selesai di-pick.</div>
             </a>
         </div>
 
@@ -168,17 +265,14 @@
             <a href="postgame.html" class="card c-orange">
                 <div class="card-icon">🏆</div>
                 <div class="card-title">Post Game</div>
-                <div class="card-desc">Tampilan statistik akhir pertandingan untuk OBS.</div>
             </a>
             <a href="postgamecontrol.html" class="card c-yellow">
                 <div class="card-icon">🕹️</div>
                 <div class="card-title">Post Game Control</div>
-                <div class="card-desc">Panel kontrol untuk mengisi data statistik post-game.</div>
             </a>
             <a href="mvpdisplay.html" class="card c-yellow">
                 <div class="card-icon">⭐</div>
                 <div class="card-title">MVP Display</div>
-                <div class="card-desc">Tampilan MVP pemain terbaik di akhir pertandingan.</div>
             </a>
         </div>
 
@@ -188,7 +282,6 @@
             <a href="reset.html" class="card c-red">
                 <div class="card-icon">🔧</div>
                 <div class="card-title">Reset Database</div>
-                <div class="card-desc">Bersihkan data Firebase untuk memulai sesi baru.</div>
             </a>
         </div>
 
@@ -201,4 +294,5 @@
         </footer>
     </div>
 </body>
+
 </html>

@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Postgame Control (Match Data) - Sharp UI</title>
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="script/firebase-config.js"></script>
     <style>
         @font-face { font-family: 'Big Noodle Titling'; src: url('Assets/Font/big_noodle_titling.ttf') format('truetype'); }
         
@@ -373,27 +377,38 @@
         let currentMvpId = null;
         let resetStage = 0; 
         let resetTimeout;
+        let isInitialized = false;
 
-        const ws = new WebSocket(`ws://${window.location.host}`);
-
-        Promise.all([
-            fetch('/api/matchdata').then(r => r.json()),
-            fetch('/api/items').then(r => r.json()),
-            fetch('/api/mvp').then(r => r.json())
-        ]).then(([mData, items, mvpData]) => {
-            matchData = mData;
-            itemList = items.length ? items : ["winter_truncheon", "immortality"]; 
-            if(mvpData && mvpData.mvp) currentMvpId = mvpData.mvp.checkboxId;
-            renderAll();
-        });
-
-        ws.onmessage = (e) => {
-            const msg = JSON.parse(e.data);
-            if(msg.type === 'matchdata_update') {
-                matchData = msg.data;
-                renderAll();
+        // --- FIREBASE INIT: Load items dari JSON lokal, lalu subscribe Firebase ---
+        async function initApp() {
+            // Load item list dari JSON lokal
+            try {
+                const itemRes = await fetch('/database/items.json');
+                const items = await itemRes.json();
+                itemList = items.length ? items : ["winter_truncheon", "immortality"];
+            } catch(e) {
+                itemList = ["winter_truncheon", "immortality"];
             }
-        };
+
+            // Load MVP state awal dari Firebase
+            const mvpSnap = await db.ref('mvpdata').once('value');
+            const mvpData = mvpSnap.val();
+            if (mvpData && mvpData.mvp) currentMvpId = mvpData.mvp.checkboxId;
+
+            // Firebase Realtime Listener untuk matchdata
+            db.ref('matchdata').on('value', async (snapshot) => {
+                let data = snapshot.val();
+                if (!data) {
+                    const res = await fetch('/database/matchdatateam.json');
+                    data = await res.json();
+                    await db.ref('matchdata').set(data);
+                }
+                matchData = data;
+                renderAll();
+            });
+        }
+
+        initApp();
 
         const durationInput = document.getElementById('game-duration');
         durationInput.addEventListener('input', function(e) {
@@ -506,18 +521,21 @@
             statusEl.textContent = "SAVING...";
             statusEl.className = "status-saving";
 
-            fetch('/api/matchdata', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(matchData)
-            }).then(r => r.json()).then(d => {
-                statusEl.textContent = "SAVED";
-                statusEl.className = "status-saved";
-                setTimeout(() => {
-                    statusEl.textContent = "READY";
-                    statusEl.classList.remove('status-saved');
-                }, 2000);
-            });
+            // Simpan ke Firebase Realtime Database
+            db.ref('matchdata').set(matchData)
+                .then(() => {
+                    statusEl.textContent = "SAVED";
+                    statusEl.className = "status-saved";
+                    setTimeout(() => {
+                        statusEl.textContent = "READY";
+                        statusEl.classList.remove('status-saved');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Error autoSave:', err);
+                    statusEl.textContent = "ERROR";
+                    statusEl.className = "";
+                });
         }
 
         function setWinner(side) {
@@ -615,42 +633,35 @@
                 currentMvpId = checkbox.id;
                 const p = matchData.teamdata[team].playerlist[index];
                 
-                let heroImg = 'Assets/HeroPick/idle.png';
-                if(p.hero && p.hero !== "") heroImg = `Assets/HeroPick/${p.hero}.png`;
+                // Gunakan photo field jika ada, fallback ke name lalu playertemp
+                let heroImg = '';
+                if(p.hero && p.hero !== "") heroImg = p.hero;
 
-                const primaryPlayerImg = `Assets/player/${p.name}.png`;
-                const fallbackPlayerImg = `Assets/player/playertemp.png`;
+                const photoField = p.photo && p.photo !== '' ? p.photo : p.name;
 
-                checkImageExists(primaryPlayerImg, (exists) => {
-                    const finalPlayerImg = exists ? primaryPlayerImg : fallbackPlayerImg;
-                    const mvpPayload = {
-                        mvp: {
-                            checkboxId: currentMvpId,
-                            side: team === 'blueteam' ? 'blue' : 'red',
-                            nickname: p.name,
-                            heroImg: heroImg,
-                            playerPhoto: finalPlayerImg,
-                            stats: {
-                                LVL: p.level, KDA: p.KDA, GOLD: p.gold, SPELL: p.spell,
-                                'ITEM 1': p.itemlist[0], 'ITEM 2': p.itemlist[1],
-                                'ITEM 3': p.itemlist[2], 'ITEM 4': p.itemlist[3],
-                                'ITEM 5': p.itemlist[4], 'ITEM 6': p.itemlist[5]
-                            }
+                const mvpPayload = {
+                    mvp: {
+                        checkboxId: currentMvpId,
+                        side: team === 'blueteam' ? 'blue' : 'red',
+                        nickname: p.name,
+                        heroImg: heroImg,
+                        playerPhoto: photoField,
+                        stats: {
+                            LVL: p.level, KDA: p.KDA, GOLD: p.gold, SPELL: p.spell,
+                            'ITEM 1': p.itemlist[0], 'ITEM 2': p.itemlist[1],
+                            'ITEM 3': p.itemlist[2], 'ITEM 4': p.itemlist[3],
+                            'ITEM 5': p.itemlist[4], 'ITEM 6': p.itemlist[5]
                         }
-                    };
-                    fetch('/api/mvp', { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify(mvpPayload) 
-                    });
-                });
+                    }
+                };
+                // Simpan MVP ke Firebase
+                db.ref('mvpdata').set(mvpPayload)
+                    .catch(err => console.error('Error saving MVP:', err));
             } else {
                 currentMvpId = null;
-                fetch('/api/mvp', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ mvp: null }) 
-                });
+                // Clear MVP di Firebase
+                db.ref('mvpdata').set({ mvp: null })
+                    .catch(err => console.error('Error clearing MVP:', err));
             }
         }
 
