@@ -360,7 +360,7 @@ async function checkPhaseCompletion() {
 
     if (allFilled) {
         // Jika penuh, lanjut ke phase berikutnya
-        handleControlAction("nextPhase"); 
+        await handleControlAction("nextPhase"); 
     } else {
         // Jika belum (untuk phase double pick), simpan saja perkembangannya
         await saveDraftData(); 
@@ -525,14 +525,18 @@ async function handleControlAction(action) {
         TimerManager.stop();
     } 
     else if (action === "nextPhase") {
-        if (currentPhaseIndex < dropdownOrder.length) {
-            currentDraftData.current_phase = currentPhaseIndex + 1;
+        const nextPhase = currentPhaseIndex + 1;
+        if (nextPhase <= dropdownOrder.length) {
+            // FIX: Update KEDUA variabel — state lokal DAN data server
+            currentPhaseIndex = nextPhase;
+            currentDraftData.current_phase = nextPhase;
             TimerManager.reset("60"); 
             currentDraftData.timer_running = true;
             TimerManager.start();
         }
     } 
     else if (action === "reset") {
+        currentPhaseIndex = 0;
         currentDraftData.current_phase = 0;
         TimerManager.reset("60");
         correctionMode = false;
@@ -549,6 +553,15 @@ async function handleControlAction(action) {
         resetSelection();
     }
     
-    // Save state utama ke server.
+    // Save state utama ke server lalu sync UI sesuai phase baru
     await saveDraftData();
+    applyServerDataToUI();
+
+    // Deteksi akhir draft: phase 17 = semua pick selesai
+    if (currentPhaseIndex >= 17) {
+        console.log("Draft selesai! Membuka postdraft2...");
+        setTimeout(() => {
+            window.open('postdraft2.html', '_blank');
+        }, 1500);
+    }
 }

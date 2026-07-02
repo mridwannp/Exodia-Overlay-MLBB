@@ -27,7 +27,6 @@ function updateUI(data) {
     const red = data.teamdata.redteam;
 
     // --- TIM BIRU ---
-    // Pastikan ID ini ada di HTML (misal: teamnameblue diberi id="name-box-1")
     setText('name-box-1', blue.teamname);
     setText('name-box-2', blue.score);
     setImage('displayImage1', blue.logo, "Logo Biru");
@@ -36,7 +35,9 @@ function updateUI(data) {
         blue.playerlist.forEach((player, index) => {
             const htmlId = 3 + index; 
             setText(`name-box-${htmlId}`, player.name);
-            setMugshot(`name-image-box-${htmlId}`, player.name);
+            // Gunakan field photo jika ada, fallback ke name
+            const photoName = (player.photo && player.photo.trim() !== "") ? player.photo : player.name;
+            setMugshot(`name-image-box-${htmlId}`, photoName);
         });
     }
 
@@ -49,7 +50,9 @@ function updateUI(data) {
         red.playerlist.forEach((player, index) => {
             const htmlId = 10 + index; 
             setText(`name-box-${htmlId}`, player.name);
-            setMugshot(`name-image-box-${htmlId}`, player.name);
+            // Gunakan field photo jika ada, fallback ke name
+            const photoName = (player.photo && player.photo.trim() !== "") ? player.photo : player.name;
+            setMugshot(`name-image-box-${htmlId}`, photoName);
         });
     }
 }

@@ -3,232 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exodia MLBB Overlay Portal</title>
+    <title>Exodia MLBB Overlay — Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #080a0f;
-            --card-bg: rgba(17, 22, 34, 0.65);
+            --bg: #080a0f;
+            --card-bg: rgba(17, 22, 34, 0.7);
             --card-border: rgba(168, 85, 247, 0.2);
-            --card-border-hover: rgba(168, 85, 247, 0.6);
-            --text-color: #f1f5f9;
-            --text-muted: #94a3b8;
-            --accent-purple: #a855f7;
-            --accent-cyan: #06b6d4;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --font-family: 'Plus Jakarta Sans', sans-serif;
+            --card-hover: rgba(168, 85, 247, 0.55);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --purple: #a855f7;
+            --cyan: #06b6d4;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f97316;
+            --yellow: #eab308;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-family);
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
             overflow-x: hidden;
         }
 
-        /* Ambient Glow Background */
-        .ambient-glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.05) 50%, rgba(0,0,0,0) 100%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-            filter: blur(80px);
-            pointer-events: none;
+        .glow {
+            position: fixed; width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(168,85,247,0.12) 0%, rgba(6,182,212,0.04) 55%, transparent 100%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            filter: blur(100px); pointer-events: none; z-index: 0;
         }
 
-        .portal-wrapper {
-            max-width: 1000px;
-            width: 100%;
-            padding: 40px 20px;
-            text-align: center;
-            z-index: 1;
+        .wrapper {
+            position: relative; z-index: 1;
+            max-width: 1100px; width: 100%;
+            padding: 40px 24px;
         }
 
+        header { text-align: center; margin-bottom: 48px; }
         header h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            background: linear-gradient(135deg, #fff 30%, var(--accent-cyan) 70%, var(--accent-purple) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 2.8rem; font-weight: 800;
+            letter-spacing: -0.05em; text-transform: uppercase;
+            background: linear-gradient(135deg, #fff 20%, var(--cyan) 60%, var(--purple) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 12px;
-            text-transform: uppercase;
-            text-shadow: 0 4px 30px rgba(168, 85, 247, 0.1);
+        }
+        header p { color: var(--muted); font-size: 1rem; }
+
+        /* Section labels */
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; color: var(--muted);
+            margin-bottom: 12px; margin-top: 28px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-label::before, .section-label::after {
+            content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06);
         }
 
-        header p {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            margin-bottom: 48px;
-        }
-
-        .menu-grid {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 24px;
-        }
-
-        .portal-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 32px 24px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .portal-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
-            pointer-events: none;
-        }
-
-        .portal-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--card-border-hover);
-            box-shadow: 0 12px 40px rgba(168, 85, 247, 0.15), 
-                        inset 0 0 12px rgba(168, 85, 247, 0.1);
-        }
-
-        .card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 70px;
-            height: 70px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .portal-card:hover .card-icon {
-            transform: scale(1.1) rotate(2deg);
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-
-        .card-desc {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* Specific Accent Colors */
-        .card-control .card-icon { color: var(--accent-purple); box-shadow: 0 0 15px rgba(168, 85, 247, 0.1); }
-        .card-display .card-icon { color: var(--accent-cyan); box-shadow: 0 0 15px rgba(6, 182, 212, 0.1); }
-        .card-postdraft .card-icon { color: var(--accent-green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); }
-        .card-reset .card-icon { color: var(--accent-red); box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); }
-
-        /* Footer info */
-        footer {
-            margin-top: 60px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
             gap: 16px;
         }
 
-        .badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 4px 10px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            backdrop-filter: blur(16px);
+            cursor: pointer;
+            text-decoration: none; color: inherit;
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, box-shadow 0.3s;
+            position: relative; overflow: hidden;
         }
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: var(--card-hover);
+            box-shadow: 0 10px 35px rgba(168,85,247,0.12);
+        }
+        .card-icon {
+            font-size: 2rem; margin-bottom: 14px;
+            width: 60px; height: 60px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: transform 0.3s;
+        }
+        .card:hover .card-icon { transform: scale(1.12) rotate(3deg); }
+        .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+        .card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
 
+        /* Color Accents */
+        .c-purple .card-icon { color: var(--purple); }
+        .c-cyan   .card-icon { color: var(--cyan); }
+        .c-green  .card-icon { color: var(--green); }
+        .c-red    .card-icon { color: var(--red); }
+        .c-orange .card-icon { color: var(--orange); }
+        .c-yellow .card-icon { color: var(--yellow); }
+
+        footer {
+            margin-top: 56px; text-align: center;
+            font-size: 0.78rem; color: var(--muted);
+            display: flex; align-items: center; justify-content: center; gap: 14px;
+        }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 4px 12px; border-radius: 999px;
+        }
         .dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--accent-green);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent-green);
+            width: 6px; height: 6px; background: var(--green);
+            border-radius: 50%; box-shadow: 0 0 6px var(--green);
             animation: pulse 2s infinite;
         }
-
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
+            0%, 100% { transform: scale(1); opacity: 0.8; }
             50% { transform: scale(1.3); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.8; }
         }
     </style>
 </head>
 <body>
-    <div class="ambient-glow"></div>
-
-    <div class="portal-wrapper">
+    <div class="glow"></div>
+    <div class="wrapper">
         <header>
             <h1>Exodia Overlay MLBB</h1>
-            <p>Pilih halaman yang ingin Anda tuju melalui panel navigasi pusat ini.</p>
+            <p>Panel navigasi pusat untuk semua halaman overlay.</p>
         </header>
 
-        <main class="menu-grid">
-            <a href="control.html" class="portal-card card-control">
+        <!-- Main Pages -->
+        <div class="section-label">Halaman Utama</div>
+        <div class="grid">
+            <a href="control.html" class="card c-purple">
                 <div class="card-icon">🎛️</div>
                 <div class="card-title">Control Panel</div>
-                <div class="card-desc">Atur draft pick/ban, edit nickname, skor, dan kelola logo tim secara realtime.</div>
+                <div class="card-desc">Atur draft pick/ban, nickname, skor, dan logo tim secara realtime.</div>
             </a>
-
-            <a href="display2.html" class="portal-card card-display">
+            <a href="display2.html" class="card c-cyan">
                 <div class="card-icon">📺</div>
                 <div class="card-title">Draft Overlay</div>
-                <div class="card-desc">Tampilan utama overlay pick & ban hero secara live untuk di-import ke OBS.</div>
+                <div class="card-desc">Tampilan utama overlay pick & ban hero live untuk OBS.</div>
             </a>
-
-            <a href="postdraft2.html" class="portal-card card-postdraft">
+            <a href="postdraft2.html" class="card c-green">
                 <div class="card-icon">📊</div>
                 <div class="card-title">Post-Draft</div>
-                <div class="card-desc">Halaman display post-draft setelah pemrosesan draft hero selesai dilakukan.</div>
+                <div class="card-desc">Display post-draft setelah seluruh hero selesai di-pick.</div>
             </a>
+        </div>
 
-            <a href="reset.html" class="portal-card card-reset">
+        <!-- Post-Game Pages -->
+        <div class="section-label">Post-Game & Statistik</div>
+        <div class="grid">
+            <a href="postgame.html" class="card c-orange">
+                <div class="card-icon">🏆</div>
+                <div class="card-title">Post Game</div>
+                <div class="card-desc">Tampilan statistik akhir pertandingan untuk OBS.</div>
+            </a>
+            <a href="postgamecontrol.html" class="card c-yellow">
+                <div class="card-icon">🕹️</div>
+                <div class="card-title">Post Game Control</div>
+                <div class="card-desc">Panel kontrol untuk mengisi data statistik post-game.</div>
+            </a>
+            <a href="mvpdisplay.html" class="card c-yellow">
+                <div class="card-icon">⭐</div>
+                <div class="card-title">MVP Display</div>
+                <div class="card-desc">Tampilan MVP pemain terbaik di akhir pertandingan.</div>
+            </a>
+        </div>
+
+        <!-- Admin Tools -->
+        <div class="section-label">Tools Admin</div>
+        <div class="grid">
+            <a href="reset.html" class="card c-red">
                 <div class="card-icon">🔧</div>
                 <div class="card-title">Reset Database</div>
-                <div class="card-desc">Bersihkan data di cloud Firebase untuk mempersiapkan sesi atau game baru.</div>
+                <div class="card-desc">Bersihkan data Firebase untuk memulai sesi baru.</div>
             </a>
-        </main>
+        </div>
 
         <footer>
             <span>Exodia Overlay MLBB &copy; 2026</span>

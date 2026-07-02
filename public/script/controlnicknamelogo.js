@@ -242,6 +242,95 @@ function clearLogo(side) {
     saveToServer();
 }
 
+// --- PLAYER PHOTO PICKER ---
+
+let allPlayers = [];
+
+async function loadPlayerList() {
+    try {
+        const response = await fetch('/database/playerlist.json');
+        allPlayers = await response.json();
+    } catch(e) {
+        console.error('Gagal load daftar player:', e);
+    }
+}
+
+function filterPlayerPicker(index) {
+    const query = document.getElementById(`player-search-${index}`).value.toLowerCase();
+    const dropdown = document.getElementById(`player-dropdown-${index}`);
+    dropdown.innerHTML = '';
+
+    if (!query) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    // Filter by filename (strip extension for display)
+    const filtered = allPlayers.filter(f => f.toLowerCase().replace('.png','').includes(query));
+    if (filtered.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    dropdown.style.display = 'flex';
+    filtered.forEach(filename => {
+        const item = document.createElement('div');
+        item.className = 'logo-dropdown-item';
+        const displayName = filename.replace('.png', '');
+        const path = `Assets/player/${encodeURIComponent(filename)}`;
+
+        const img = document.createElement('img');
+        img.src = path;
+        img.alt = displayName;
+        img.style.cssText = 'width:36px;height:36px;object-fit:cover;border-radius:4px;';
+
+        const label = document.createElement('span');
+        label.textContent = displayName;
+
+        item.appendChild(img);
+        item.appendChild(label);
+        item.onclick = () => selectPlayer(index, displayName, path, filename, dropdown);
+        dropdown.appendChild(item);
+    });
+}
+
+function selectPlayer(index, displayName, path, filename, dropdown) {
+    // Simpan nama file (tanpa .png) ke player photo field di server
+    const searchInput = document.getElementById(`player-search-${index}`);
+    if (searchInput) searchInput.value = displayName;
+    if (dropdown) dropdown.style.display = 'none';
+
+    // Update Firebase matchdata playerphoto
+    savePlayerPhoto(index, displayName);
+}
+
+async function savePlayerPhoto(inputIndex, photoName) {
+    try {
+        const snapshot = await db.ref('matchdata').once('value');
+        let fullData = snapshot.val();
+        if (!fullData) return;
+
+        // Map input index ke team & player slot
+        // Blue: index 3-7 -> slot 0-4 | Red: index 10-14 -> slot 0-4
+        if (inputIndex >= 3 && inputIndex <= 7) {
+            const slot = inputIndex - 3;
+            if (fullData.teamdata.blueteam.playerlist[slot]) {
+                fullData.teamdata.blueteam.playerlist[slot].photo = photoName;
+            }
+        } else if (inputIndex >= 10 && inputIndex <= 14) {
+            const slot = inputIndex - 10;
+            if (fullData.teamdata.redteam.playerlist[slot]) {
+                fullData.teamdata.redteam.playerlist[slot].photo = photoName;
+            }
+        }
+
+        await db.ref('matchdata').set(fullData);
+    } catch(e) {
+        console.error('Error saving player photo:', e);
+    }
+}
+
+
 // --- LOGIKA TOMBOL (Reset, Switch, Swap) ---
 
 async function resetNames() {
@@ -380,6 +469,7 @@ function initializeApp() {
     loadFromServer(); 
     setupAutoSave();
     loadLogoList();
+    loadPlayerList();
 }
 
 window.onload = initializeApp;
