@@ -71,45 +71,36 @@ function setText(id, text) {
     }
 }
 
-// BARU: Fungsi Resize yang Lebih Kuat & Akurat
+// BARU: Fungsi Resize yang Lebih Kuat & Akurat (Berdasarkan Lebar Wadah Induk)
 function autoResizeText(element) {
-    // Validasi elemen
-    if (!element || element.clientWidth === 0) return;
+    if (!element) return;
 
-    // 1. Reset styling agar kita bisa mengukur ukuran "asli" berdasarkan CSS
+    // Reset styling awal agar bisa mengukur ukuran asli teks
     element.style.fontSize = ""; 
-    element.style.whiteSpace = "nowrap"; // Wajib satu baris
-    element.style.overflow = "hidden";   // Sembunyikan overflow saat perhitungan
+    element.style.whiteSpace = "nowrap"; 
+    element.style.overflow = "hidden";   
     
-    // 2. Ambil ukuran saat ini dari CSS (misal dari clamp/cqi)
+    const parent = element.parentElement;
+    if (!parent) return;
+
+    // Ambil lebar maksimum wadah induk (parent)
+    const maxAllowedWidth = parent.clientWidth;
+    if (maxAllowedWidth <= 0) return; // Wadah tidak terlihat / belum render
+
     const style = window.getComputedStyle(element);
-    let currentSize = parseFloat(style.fontSize);
-    
-    // Setting batas
-    const minSize = 8; // Pixel
-    
-    // Padding horizontal (kiri + kanan) penting agar teks tidak menempel ke pinggir
-    const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-    const availableWidth = element.clientWidth - padding;
+    let currentSize = parseFloat(style.fontSize) || 14;
+    const minSize = 8; // Batas minimal ukuran font dalam pixel
 
-    // 3. Loop Pengecilan
-    // Selama lebar konten teks (scrollWidth) lebih besar dari lebar wadah (clientWidth)
-    while ((element.scrollWidth > element.clientWidth) && currentSize > minSize) {
-        currentSize -= 1; // Turunkan 1px setiap iterasi (bisa 0.5 jika ingin lebih presisi)
+    // Jika lebar konten teks melebihi lebar wadah induk, kecilkan ukuran font
+    while ((element.scrollWidth > maxAllowedWidth) && currentSize > minSize) {
+        currentSize -= 0.5; // Turunkan perlahan 0.5px untuk keakuratan tinggi
         element.style.fontSize = `${currentSize}px`;
-    }
-
-    // 4. Double Check (Safety)
-    // Terkadang browser butuh 1 cycle render lagi, jika masih overflow, kurangi sedikit lagi
-    if (element.scrollWidth > element.clientWidth) {
-         currentSize -= 1;
-         element.style.fontSize = `${currentSize}px`;
     }
 }
 
 function setImage(id, base64Data, altText) {
     const img = document.getElementById(id);
-    const defaultLogo = "Assets/other/nologo.png"; 
+    const defaultLogo = "Assets/Other/nologo.png"; 
 
     if (img) {
         if (base64Data && base64Data.trim() !== "") {

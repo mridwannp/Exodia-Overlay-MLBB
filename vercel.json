@@ -1,7 +1,7 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/", "destination": "/public/control.html" },
+    { "source": "/", "destination": "/public/index.html" },
     { "source": "/:path*", "destination": "/public/:path*" }
   ]
 }

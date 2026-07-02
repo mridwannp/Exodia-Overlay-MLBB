@@ -2,79 +2,39 @@
   "draftdata": {
     "timer": "60",
     "timerRunning": false,
-    "current_phase": 1,
+    "current_phase": 0,
     "blueside": {
       "ban": [
-        {
-          "hero": "/Assets/HeroPick/aldous.png"
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        }
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" }
       ],
       "pick": [
-        {
-          "hero": "/Assets/HeroPick/minotour.png"
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        }
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" }
       ]
     },
     "redside": {
       "ban": [
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        }
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" }
       ],
       "pick": [
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        },
-        {
-          "hero": ""
-        }
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" },
+        { "hero": "" }
       ]
     },
-    "timer_running": true
+    "timer_running": false
   }
 }

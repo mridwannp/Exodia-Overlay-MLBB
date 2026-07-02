@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exodia MLBB Overlay Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #080a0f;
+            --card-bg: rgba(17, 22, 34, 0.65);
+            --card-border: rgba(168, 85, 247, 0.2);
+            --card-border-hover: rgba(168, 85, 247, 0.6);
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-purple: #a855f7;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.05) 50%, rgba(0,0,0,0) 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .portal-wrapper {
+            max-width: 1000px;
+            width: 100%;
+            padding: 40px 20px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            background: linear-gradient(135deg, #fff 30%, var(--accent-cyan) 70%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            text-shadow: 0 4px 30px rgba(168, 85, 247, 0.1);
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 48px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .portal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 32px 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--card-border-hover);
+            box-shadow: 0 12px 40px rgba(168, 85, 247, 0.15), 
+                        inset 0 0 12px rgba(168, 85, 247, 0.1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .portal-card:hover .card-icon {
+            transform: scale(1.1) rotate(2deg);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .card-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Specific Accent Colors */
+        .card-control .card-icon { color: var(--accent-purple); box-shadow: 0 0 15px rgba(168, 85, 247, 0.1); }
+        .card-display .card-icon { color: var(--accent-cyan); box-shadow: 0 0 15px rgba(6, 182, 212, 0.1); }
+        .card-postdraft .card-icon { color: var(--accent-green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); }
+        .card-reset .card-icon { color: var(--accent-red); box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); }
+
+        /* Footer info */
+        footer {
+            margin-top: 60px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <div class="portal-wrapper">
+        <header>
+            <h1>Exodia Overlay MLBB</h1>
+            <p>Pilih halaman yang ingin Anda tuju melalui panel navigasi pusat ini.</p>
+        </header>
+
+        <main class="menu-grid">
+            <a href="control.html" class="portal-card card-control">
+                <div class="card-icon">🎛️</div>
+                <div class="card-title">Control Panel</div>
+                <div class="card-desc">Atur draft pick/ban, edit nickname, skor, dan kelola logo tim secara realtime.</div>
+            </a>
+
+            <a href="display2.html" class="portal-card card-display">
+                <div class="card-icon">📺</div>
+                <div class="card-title">Draft Overlay</div>
+                <div class="card-desc">Tampilan utama overlay pick & ban hero secara live untuk di-import ke OBS.</div>
+            </a>
+
+            <a href="postdraft2.html" class="portal-card card-postdraft">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Post-Draft</div>
+                <div class="card-desc">Halaman display post-draft setelah pemrosesan draft hero selesai dilakukan.</div>
+            </a>
+
+            <a href="reset.html" class="portal-card card-reset">
+                <div class="card-icon">🔧</div>
+                <div class="card-title">Reset Database</div>
+                <div class="card-desc">Bersihkan data di cloud Firebase untuk mempersiapkan sesi atau game baru.</div>
+            </a>
+        </main>
+
+        <footer>
+            <span>Exodia Overlay MLBB &copy; 2026</span>
+            <div class="badge">
+                <span class="dot"></span>
+                <span>Firebase Cloud Connected</span>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

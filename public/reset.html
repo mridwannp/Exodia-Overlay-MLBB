@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Reset Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0D0F12;
+            color: #EAEAEA;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #1A1C20;
+            border: 1px solid #3f3f46;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { font-size: 1.5em; color: #A855F7; margin-bottom: 10px; }
+        p { color: #999; font-size: 0.9em; margin-bottom: 30px; line-height: 1.6; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 2px solid;
+            background: transparent;
+            font-size: 0.95em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger { border-color: #F94868; color: #F94868; }
+        .btn-danger:hover { background: #F94868; color: #fff; }
+        .btn-success { border-color: #00FF8C; color: #00FF8C; }
+        .btn-success:hover { background: #00FF8C; color: #000; }
+        .btn-info { border-color: #00AFFF; color: #00AFFF; }
+        .btn-info:hover { background: #00AFFF; color: #000; }
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            display: none;
+        }
+        .status-ok { background: rgba(0,255,140,0.1); border: 1px solid #00FF8C; color: #00FF8C; }
+        .status-err { background: rgba(249,72,104,0.1); border: 1px solid #F94868; color: #F94868; }
+        .status-info { background: rgba(168,85,247,0.1); border: 1px solid #A855F7; color: #A855F7; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔧 Firebase Reset Tool</h1>
+    <p>Gunakan halaman ini untuk mereset data Firebase ke kondisi awal (kosong). Hanya gunakan saat diperlukan, misalnya sebelum turnamen baru dimulai.</p>
+
+    <button class="btn btn-danger" onclick="resetMatchDraft()">🗑️ RESET DRAFT DATA</button>
+    <button class="btn btn-danger" onclick="resetMatchData()">🗑️ RESET MATCHDATA (NAMA & SKOR)</button>
+    <button class="btn btn-info" onclick="resetAll()">⚡ RESET SEMUA SEKALIGUS</button>
+    <button class="btn btn-success" onclick="checkStatus()">✅ CEK STATUS DATABASE</button>
+
+    <div id="status"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="script/firebase-config.js"></script>
+
+<script>
+    function showStatus(msg, type = 'info') {
+        const el = document.getElementById('status');
+        el.textContent = msg;
+        el.className = `status-${type}`;
+        el.style.display = 'block';
+    }
+
+    const emptyDraft = {
+        draftdata: {
+            timer: "60",
+            timerRunning: false,
+            current_phase: 0,
+            blueside: {
+                ban: [{hero:""},{hero:""},{hero:""},{hero:""},{hero:""}],
+                pick: [{hero:""},{hero:""},{hero:""},{hero:""},{hero:""}]
+            },
+            redside: {
+                ban: [{hero:""},{hero:""},{hero:""},{hero:""},{hero:""}],
+                pick: [{hero:""},{hero:""},{hero:""},{hero:""},{hero:""}]
+            },
+            timer_running: false
+        }
+    };
+
+    const emptyMatch = {
+        game_duration: "00:00",
+        game_number: "0",
+        teamdata: {
+            blueteam: {
+                teamname: "BLUE TEAM", score: "0", logo: "",
+                totalgold: 0, turret: 0, lord: 0, turtle: 0,
+                playerlist: Array(5).fill(null).map(() => ({
+                    name: "", lane: "none", hero: "", banhero: "",
+                    level: 0, gold: 0, KDA: "0/0/0", spell: "idle",
+                    itemlist: ["idle","idle","idle","idle","idle","idle"]
+                }))
+            },
+            redteam: {
+                teamname: "RED TEAM", score: "0", logo: "",
+                totalgold: 0, turret: 0, lord: 0, turtle: 0,
+                playerlist: Array(5).fill(null).map(() => ({
+                    name: "", lane: "none", hero: "", banhero: "",
+                    level: 0, gold: 0, KDA: "0/0/0", spell: "idle",
+                    itemlist: ["idle","idle","idle","idle","idle","idle"]
+                }))
+            }
+        }
+    };
+
+    async function resetMatchDraft() {
+        try {
+            showStatus('Mereset draft data...', 'info');
+            await db.ref('matchdraft').set(emptyDraft);
+            showStatus('✅ Draft data berhasil direset! Semua hero pick/ban sudah kosong.', 'ok');
+        } catch(e) {
+            showStatus('❌ Error: ' + e.message, 'err');
+        }
+    }
+
+    async function resetMatchData() {
+        try {
+            showStatus('Mereset matchdata...', 'info');
+            await db.ref('matchdata').set(emptyMatch);
+            showStatus('✅ Matchdata berhasil direset! Nama tim, skor, dan hero sudah kosong.', 'ok');
+        } catch(e) {
+            showStatus('❌ Error: ' + e.message, 'err');
+        }
+    }
+
+    async function resetAll() {
+        try {
+            showStatus('Mereset semua data...', 'info');
+            await db.ref('matchdraft').set(emptyDraft);
+            await db.ref('matchdata').set(emptyMatch);
+            showStatus('✅ Semua data berhasil direset! Siap untuk sesi baru.', 'ok');
+        } catch(e) {
+            showStatus('❌ Error: ' + e.message, 'err');
+        }
+    }
+
+    async function checkStatus() {
+        try {
+            showStatus('Mengecek database...', 'info');
+            const draft = await db.ref('matchdraft/draftdata/current_phase').once('value');
+            const match = await db.ref('matchdata/teamdata/blueteam/teamname').once('value');
+            const phase = draft.val();
+            const teamName = match.val();
+            showStatus(`✅ Firebase terhubung!\nFase saat ini: ${phase ?? 'null'} | Tim Biru: "${teamName ?? 'null'}"`, 'ok');
+        } catch(e) {
+            showStatus('❌ Gagal terhubung ke Firebase: ' + e.message, 'err');
+        }
+    }
+</script>
+</body>
+</html>

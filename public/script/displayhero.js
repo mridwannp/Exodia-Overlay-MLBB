@@ -128,24 +128,24 @@ const timerElement = document.getElementById('timer');
 const timerBar = document.getElementById('timer-bar');
 
 const phases = [
-    { type: "BANNING", direction: "/Assets/Other/LeftBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/RightBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/LeftBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/RightBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/LeftBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/RightBanning.gif" },
-    { type: "PICKING", direction: "/Assets/Other/LeftPicking.gif" },
-    { type: "PICKING", direction: "/Assets/Other/RightPicking.gif" },
-    { type: "PICKING", direction: "/Assets/Other/LeftPicking.gif" },
-    { type: "PICKING", direction: "/Assets/Other/RightPicking.gif" },
-    { type: "BANNING", direction: "/Assets/Other/RightBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/LeftBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/RightBanning.gif" },
-    { type: "BANNING", direction: "/Assets/Other/LeftBanning.gif" },
-    { type: "PICKING", direction: "/Assets/Other/RightPicking.gif" },
-    { type: "PICKING", direction: "/Assets/Other/LeftPicking.gif" },
-    { type: "PICKING", direction: "/Assets/Other/RightPicking.gif" },
-    { type: "ADJUSTMENT", direction: "/Assets/Other/Adjustment.gif" }
+    { type: "BANNING", direction: "/Assets/Other/leftbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/rightbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/leftbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/rightbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/leftbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/rightbanning.gif" },
+    { type: "PICKING", direction: "/Assets/Other/leftpicking.gif" },
+    { type: "PICKING", direction: "/Assets/Other/rightpicking.gif" },
+    { type: "PICKING", direction: "/Assets/Other/leftpicking.gif" },
+    { type: "PICKING", direction: "/Assets/Other/rightpicking.gif" },
+    { type: "BANNING", direction: "/Assets/Other/rightbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/leftbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/rightbanning.gif" },
+    { type: "BANNING", direction: "/Assets/Other/leftbanning.gif" },
+    { type: "PICKING", direction: "/Assets/Other/rightpicking.gif" },
+    { type: "PICKING", direction: "/Assets/Other/leftpicking.gif" },
+    { type: "PICKING", direction: "/Assets/Other/rightpicking.gif" },
+    { type: "ADJUSTMENT", direction: "/Assets/Other/adjustment.gif" }
 ];
 
 const phasesActiveBoxes = [
