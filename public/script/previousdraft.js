@@ -21,8 +21,13 @@ let saveState = 0; // 0 = Standby, 1 = Menunggu Konfirmasi
             clearTimeout(resetTimer); // Batalkan timer reset
             
             try {
-                // Panggil API Server
-                await fetch('/api/archive-draft', { method: 'POST' });
+                // Firebase implementation of archive-draft
+                const snapshot = await db.ref('matchdraft').once('value');
+                const draft = snapshot.val();
+                if (draft) {
+                    // Push the current draft to history
+                    await db.ref('previousdrafts').push(draft);
+                }
                 
                 // Ubah tampilan jadi Sukses
                 btn.innerText = "SAVED!";
@@ -35,10 +40,10 @@ let saveState = 0; // 0 = Standby, 1 = Menunggu Konfirmasi
                     resetSaveButton(btn);
                 }, 2000);
                 
-                console.log("Draft Saved Successfully.");
+                console.log("Draft Saved Successfully to Firebase.");
 
             } catch (e) {
-                console.error("Gagal menyimpan:", e);
+                console.error("Gagal menyimpan ke Firebase:", e);
                 resetSaveButton(btn); // Reset jika error
             }
         }
@@ -58,10 +63,6 @@ let saveState = 0; // 0 = Standby, 1 = Menunggu Konfirmasi
     
     async function controlAnalyzer(action) {
         try {
-            await fetch('/api/analyzer-control', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action })
-            });
-        } catch (e) { console.error(e); }
+            await db.ref('analyzer-control').set({ action, timestamp: Date.now() });
+        } catch (e) { console.error("Error setting analyzer control in Firebase:", e); }
     }

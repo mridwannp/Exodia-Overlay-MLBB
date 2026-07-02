@@ -23,67 +23,26 @@ function getVoiceByImg(imgSrc) {
     return hero ? hero.voice : null;
 }
 
-// --- 2. WEBSOCKET MANAGER (AUTO RECONNECT) ---
+// --- 2. FIREBASE REALTIME SYNCHRONIZATION ---
 
-function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${protocol}://${window.location.host}`);
-
-    ws.onopen = () => {
-        console.log('Connected to Server');
-        fetchDraftData(); 
+function initFirebaseSync() {
+    db.ref('matchdraft').on('value', async (snapshot) => {
+        let data = snapshot.val();
         
-        if (reconnectInterval) {
-            clearInterval(reconnectInterval);
-            reconnectInterval = null;
-        }
-    };
-
-    ws.onmessage = (event) => {
-        try {
-            const msg = JSON.parse(event.data);
-            
-            // 1. UPDATE DATA FULL (Phase ganti, Pick/Ban Hero)
-            if (msg.type === 'draftdata_update' && msg.data) {
-                console.log("Menerima update full langsung via Socket");
-                processData(msg.data);
-            } 
-            else if (msg.type === 'draftdata_update') {
-                fetchDraftData();
+        if (!data || !data.draftdata) {
+            console.log("Firebase matchdraft is empty. Initializing from local JSON...");
+            try {
+                const response = await fetch('/database/matchdraft.json');
+                data = await response.json();
+                await db.ref('matchdraft').set(data);
+            } catch(e) {
+                console.error("Gagal inisialisasi Firebase matchdraft:", e);
+                return;
             }
-            // 2. TANGKAP DETAK TIMER TERISOLASI DARI CONTROLLER (Tick / Detik)
-            else if (msg.type === 'update' && msg.data && msg.data.draftdata) {
-                // Jangan timpa seluruh data, cukup update angka dan barnya saja
-                syncTimerTick(msg.data.draftdata.timer, msg.data.draftdata.timer_running, false);
-            }
-        } catch (e) {
-            console.error("WS Parse Error", e);
         }
-    };
 
-    ws.onclose = () => {
-        console.log('Koneksi terputus. Mencoba reconnect dalam 3 detik...');
-        if (!reconnectInterval) {
-            reconnectInterval = setInterval(connectWebSocket, 3000);
-        }
-    };
-
-    ws.onerror = (err) => {
-        console.error('Socket error:', err);
-        ws.close();
-    };
-}
-
-async function fetchDraftData() {
-    try {
-        const response = await fetch('/api/matchdraft');
-        const data = await response.json();
-        if (data && data.draftdata) {
-            processData(data.draftdata);
-        }
-    } catch (error) {
-        console.error("Error fetch draft data:", error);
-    }
+        processData(data.draftdata);
+    });
 }
 
 function processData(newDraftData) {
@@ -93,7 +52,7 @@ function processData(newDraftData) {
 }
 
 // --- INITIALIZE ---
-loadHeroes().then(() => connectWebSocket());
+loadHeroes().then(() => initFirebaseSync());
 
 
 // --- 3. DISPLAY UPDATE LOGIC ---

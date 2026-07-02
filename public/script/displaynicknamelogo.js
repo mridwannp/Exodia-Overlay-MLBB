@@ -1,20 +1,22 @@
 // public/script/displaynicknamelogo.js
 
-// 1. Inisialisasi WebSocket ke Server
-const socket = new WebSocket(`ws://${window.location.host}`);
-
-// 2. Fungsi untuk mengambil data dari Server (matchdatateam.json)
-async function fetchDataAndUpdate() {
-    try {
-        const response = await fetch('/api/matchdata');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+// 1. Firebase Sync and Auto-Initialization
+function initFirebaseSync() {
+    db.ref('matchdata').on('value', async (snapshot) => {
+        let data = snapshot.val();
+        if (!data) {
+            console.log("Firebase matchdata is empty. Initializing from local JSON...");
+            try {
+                const response = await fetch('/database/matchdatateam.json');
+                data = await response.json();
+                await db.ref('matchdata').set(data);
+            } catch(e) {
+                console.error("Gagal inisialisasi Firebase matchdata:", e);
+                return;
+            }
         }
-        const data = await response.json();
         updateUI(data);
-    } catch (error) {
-        console.error("Gagal mengambil data match:", error);
-    }
+    });
 }
 
 // 3. Fungsi Mapping Data JSON ke HTML
@@ -149,27 +151,5 @@ function setMugshot(containerId, playerName) {
     container.appendChild(img);
 }
 
-// --- LOGIKA KONEKSI REALTIME ---
-
-socket.onopen = () => {
-    console.log("Terhubung ke Server Overlay via WebSocket");
-    fetchDataAndUpdate(); 
-};
-
-socket.onmessage = (event) => {
-    try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'matchdata_update') {
-            fetchDataAndUpdate();
-        }
-    } catch (e) {
-        console.error("Error parsing WebSocket message:", e);
-    }
-};
-
-socket.onclose = () => {
-    console.log("Terputus dari server.");
-    setTimeout(() => {
-        window.location.reload(); 
-    }, 3000);
-};
+// Start Firebase Realtime Synchronization
+initFirebaseSync();

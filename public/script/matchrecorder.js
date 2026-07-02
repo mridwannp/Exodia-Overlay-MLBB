@@ -18,31 +18,24 @@ async function handleSaveDraft(buttonElement) {
     buttonElement.style.cursor = "wait";
 
     try {
-        const response = await fetch('/api/save-match-record', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            // Sukses
-            buttonElement.innerText = "SAVED!";
-            buttonElement.style.color = "#00FF8C"; // Hijau cerah
-            buttonElement.style.borderColor = "#00FF8C";
-            console.log("Match data successfully archived.");
-        } else {
-            // Gagal dari server
-            buttonElement.innerText = "ERROR";
-            buttonElement.style.color = "red";
-            buttonElement.style.borderColor = "red";
-            console.error("Server failed to archive match data.");
+        // Ambil matchdata terbaru dari Firebase
+        const snapshot = await db.ref('matchdata').once('value');
+        const matchData = snapshot.val();
+        
+        if (matchData) {
+            // Push match data ke database history
+            await db.ref('savedmatches').push(matchData);
         }
 
+        // Sukses
+        buttonElement.innerText = "SAVED!";
+        buttonElement.style.color = "#00FF8C"; // Hijau cerah
+        buttonElement.style.borderColor = "#00FF8C";
+        console.log("Match data successfully archived to Firebase.");
+
     } catch (error) {
-        // Error koneksi/jaringan
-        console.error("Network error:", error);
-        buttonElement.innerText = "NET ERR";
+        console.error("Firebase error saving match:", error);
+        buttonElement.innerText = "ERROR";
         buttonElement.style.color = "red";
         buttonElement.style.borderColor = "red";
     }
@@ -60,7 +53,6 @@ async function handleSaveDraft(buttonElement) {
 // Fitur Delete All Records dengan Double Confirmation
 async function handleDeleteAllRecords(buttonElement) {
     // Simpan teks & warna asli tombol untuk feedback visual
-    // Menggunakan dataset agar state original tidak hilang saat di-replace "ARE YOU SURE?"
     const originalText = buttonElement.dataset.origText || buttonElement.innerText;
     const originalColor = buttonElement.dataset.origColor || buttonElement.style.color;
     const originalBorder = buttonElement.dataset.origBorder || buttonElement.style.borderColor;
@@ -110,29 +102,18 @@ async function handleDeleteAllRecords(buttonElement) {
     buttonElement.style.cursor = "wait";
 
     try {
-        const response = await fetch('/api/delete-all-records', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        // Hapus savedmatches dari Firebase
+        await db.ref('savedmatches').remove();
 
-        if (response.ok) {
-            // Sukses
-            buttonElement.innerText = "DELETED!";
-            buttonElement.style.color = "#00FF8C"; // Hijau cerah
-            buttonElement.style.borderColor = "#00FF8C";
-            console.log("All saved matches have been deleted from database.");
-        } else {
-            // Gagal dari server
-            buttonElement.innerText = "ERROR";
-            buttonElement.style.color = "red";
-            buttonElement.style.borderColor = "red";
-            console.error("Server failed to delete match data.");
-        }
+        // Sukses
+        buttonElement.innerText = "DELETED!";
+        buttonElement.style.color = "#00FF8C"; // Hijau cerah
+        buttonElement.style.borderColor = "#00FF8C";
+        console.log("All saved matches have been deleted from Firebase database.");
 
     } catch (error) {
-        // Error koneksi/jaringan
-        console.error("Network error:", error);
-        buttonElement.innerText = "NET ERR";
+        console.error("Firebase error deleting matches:", error);
+        buttonElement.innerText = "ERROR";
         buttonElement.style.color = "red";
         buttonElement.style.borderColor = "red";
     }

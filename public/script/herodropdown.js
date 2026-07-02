@@ -35,64 +35,26 @@ const dropdownOrder = [
 ];
 
 // ==========================================
-// 1. WEBSOCKET MANAGER (AUTO RECONNECT)
-// ==========================================
-
-function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    ws = new WebSocket(`${protocol}://${window.location.host}`);
-
-    ws.onopen = () => {
-        console.log('Controller Connected to Server');
-        // Saat connect, ambil data terbaru sekali saja
-        fetchDraftData();
-        
-        if (reconnectInterval) {
-            clearInterval(reconnectInterval);
-            reconnectInterval = null;
-        }
-    };
-
-    ws.onmessage = (event) => {
-        try {
-            const msg = JSON.parse(event.data);
-            
-            // Jika ada update dari server (misal dari controller lain), sinkronkan local state
-            if (msg.type === 'draftdata_update' && msg.data) {
-                // Update local state tanpa fetch ulang
-                currentDraftData = msg.data;
-                applyServerDataToUI();
-            }
-        } catch (e) {
-            console.error("WS Parse Error", e);
-        }
-    };
-
-    ws.onclose = () => {
-        console.log('Koneksi terputus. Mencoba reconnect...');
-        if (!reconnectInterval) {
-            reconnectInterval = setInterval(connectWebSocket, 3000);
-        }
-    };
-
-    ws.onerror = (err) => {
-        console.error('Socket error:', err);
-        ws.close();
-    };
-}
-
-// ==========================================
-// 2. DATA HANDLING (FETCH & SAVE)
+// 1. DATA HANDLING (FETCH & SAVE) WITH FIREBASE
 // ==========================================
 
 async function fetchDraftData() {
     try {
-        const response = await fetch('/api/matchdraft');
-        const data = await response.json();
+        const snapshot = await db.ref('matchdraft').once('value');
+        let data = snapshot.val();
+        
+        if (!data || !data.draftdata) {
+            console.log("Firebase matchdraft is empty. Initializing from local JSON...");
+            const response = await fetch('/database/matchdraft.json');
+            data = await response.json();
+            await db.ref('matchdraft').set(data);
+        }
+        
         currentDraftData = data.draftdata;
         applyServerDataToUI();
+        TimerManager.syncState();
     } catch (error) {
-        console.error("Gagal mengambil data draft:", error);
+        console.error("Gagal mengambil data draft dari Firebase:", error);
     }
 }
 
@@ -101,13 +63,9 @@ async function saveDraftData() {
     isSaving = true;
 
     try {
-        await fetch('/api/matchdraft', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ draftdata: currentDraftData })
-        });
+        await db.ref('matchdraft').set({ draftdata: currentDraftData });
     } catch (error) {
-        console.error("Gagal menyimpan data draft:", error);
+        console.error("Gagal menyimpan data draft ke Firebase:", error);
     } finally {
         isSaving = false;
     }
@@ -130,20 +88,21 @@ async function updateMatchDataHero(dropdownIndex, heroValue) {
         const loc = getMatchDataLocation(dropdownIndex);
         if (!loc) return;
 
-        const response = await fetch('/api/matchdata');
-        const data = await response.json();
+        const snapshot = await db.ref('matchdata').once('value');
+        let data = snapshot.val();
+        
+        if (!data) {
+            const response = await fetch('/database/matchdatateam.json');
+            data = await response.json();
+        }
 
         if (data.teamdata && data.teamdata[loc.team] && data.teamdata[loc.team].playerlist[loc.idx]) {
             data.teamdata[loc.team].playerlist[loc.idx][loc.field] = heroValue;
         }
 
-        await fetch('/api/matchdata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+        await db.ref('matchdata').set(data);
     } catch (error) {
-        console.error("Error updating matchdata hero:", error);
+        console.error("Error updating matchdata hero via Firebase:", error);
     }
 }
 
@@ -154,8 +113,10 @@ async function swapMatchDataHeroes(index1, index2) {
         
         if (!loc1 || !loc2) return;
 
-        const response = await fetch('/api/matchdata');
-        const data = await response.json();
+        const snapshot = await db.ref('matchdata').once('value');
+        let data = snapshot.val();
+
+        if (!data) return;
 
         let val1 = "", val2 = "";
         
@@ -167,20 +128,18 @@ async function swapMatchDataHeroes(index1, index2) {
         if (data.teamdata[loc1.team].playerlist[loc1.idx]) data.teamdata[loc1.team].playerlist[loc1.idx][loc1.field] = val2;
         if (data.teamdata[loc2.team].playerlist[loc2.idx]) data.teamdata[loc2.team].playerlist[loc2.idx][loc2.field] = val1;
 
-        await fetch('/api/matchdata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+        await db.ref('matchdata').set(data);
     } catch (error) {
-        console.error("Error swapping matchdata heroes:", error);
+        console.error("Error swapping matchdata heroes via Firebase:", error);
     }
 }
 
 async function resetMatchDataHeroes() {
     try {
-        const response = await fetch('/api/matchdata');
-        const data = await response.json();
+        const snapshot = await db.ref('matchdata').once('value');
+        let data = snapshot.val();
+
+        if (!data) return;
 
         // Reset Blue Team
         if (data.teamdata.blueteam && data.teamdata.blueteam.playerlist) {
@@ -198,15 +157,10 @@ async function resetMatchDataHeroes() {
             });
         }
 
-        await fetch('/api/matchdata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        
-        console.log("Match Data Heroes & Bans Reset Successfully");
+        await db.ref('matchdata').set(data);
+        console.log("Match Data Heroes & Bans Reset Successfully in Firebase");
     } catch (error) {
-        console.error("Error resetting matchdata heroes:", error);
+        console.error("Error resetting matchdata heroes via Firebase:", error);
     }
 }
 
@@ -499,18 +453,11 @@ const TimerManager = {
                     currentDraftData.timer = currentTime.toString();
                     this.updateUI();
                     
-                    // Sync detik ke Overlay HANYA via WebSocket (tanpa save JSON)
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({
-                            type: 'update',
-                            data: {
-                                draftdata: { 
-                                    timer: currentDraftData.timer, 
-                                    timer_running: true 
-                                }
-                            }
-                        }));
-                    }
+                    // Sync detik ke Firebase Realtime Database
+                    db.ref('matchdraft/draftdata').update({
+                        timer: currentDraftData.timer,
+                        timer_running: true
+                    });
                 } else {
                     this.stop(); // Berhenti otomatis di 0
                 }
@@ -523,7 +470,12 @@ const TimerManager = {
             clearInterval(this.interval);
             this.interval = null;
         }
-        if (currentDraftData) currentDraftData.timer_running = false;
+        if (currentDraftData) {
+            currentDraftData.timer_running = false;
+            db.ref('matchdraft/draftdata').update({
+                timer_running: false
+            });
+        }
         this.updateUI();
     },
 
@@ -532,6 +484,10 @@ const TimerManager = {
         if (currentDraftData) {
             currentDraftData.timer = defaultTime;
             currentDraftData.timer_running = false;
+            db.ref('matchdraft/draftdata').update({
+                timer: defaultTime,
+                timer_running: false
+            });
         }
         this.updateUI();
     },

@@ -6,11 +6,19 @@ let currentRedLogo = "";
 
 // --- FUNGSI UTAMA: LOAD & SAVE DATA ---
 
-// Mengambil data dari Server dan mengisi Input Form
+// Mengambil data dari Firebase dan mengisi Input Form
 async function loadFromServer() {
     try {
-        const response = await fetch('/api/matchdata');
-        const data = await response.json();
+        const snapshot = await db.ref('matchdata').once('value');
+        let data = snapshot.val();
+
+        // Fallback jika Firebase kosong
+        if (!data) {
+            console.log("Firebase matchdata is empty. Initializing from local JSON...");
+            const response = await fetch('/database/matchdatateam.json');
+            data = await response.json();
+            await db.ref('matchdata').set(data);
+        }
 
         // Cek struktur data agar tidak error
         if (!data.teamdata) return;
@@ -22,6 +30,9 @@ async function loadFromServer() {
         document.getElementById('name-input-1').value = blue.teamname || "";
         document.getElementById('name-input-2').value = blue.score || "";
         currentBlueLogo = blue.logo || ""; 
+
+        // Tampilkan logo di preview dropdown baru jika ada
+        if (currentBlueLogo) showLogoPreview(1, currentBlueLogo);
 
         // Player Name & Lane Biru (Index 3-7)
         for(let i=0; i<5; i++) {
@@ -40,6 +51,9 @@ async function loadFromServer() {
         document.getElementById('name-input-9').value = red.score || "";
         currentRedLogo = red.logo || ""; 
 
+        // Tampilkan logo di preview dropdown baru jika ada
+        if (currentRedLogo) showLogoPreview(2, currentRedLogo);
+
         // Player Name & Lane Merah (Index 10-14)
         for(let i=0; i<5; i++) {
             // Load Nama
@@ -53,16 +67,21 @@ async function loadFromServer() {
         }
 
     } catch (error) {
-        console.error("Gagal memuat data:", error);
+        console.error("Gagal memuat data dari Firebase:", error);
     }
 }
 
-// FUNGSI SAVE YANG AMAN
+// FUNGSI SAVE YANG AMAN KE FIREBASE
 async function saveToServer() {
     try {
-        // 1. AMBIL DATA TERBARU DARI SERVER DULU
-        const getResponse = await fetch('/api/matchdata');
-        let fullData = await getResponse.json();
+        // 1. AMBIL DATA TERBARU DARI FIREBASE
+        const snapshot = await db.ref('matchdata').once('value');
+        let fullData = snapshot.val();
+
+        if (!fullData) {
+            const response = await fetch('/database/matchdatateam.json');
+            fullData = await response.json();
+        }
 
         // 2. MODIFIKASI HANYA FIELD YANG DIURUS TOOL INI
         
@@ -100,17 +119,14 @@ async function saveToServer() {
             fullData.teamdata.redteam.playerlist[i].lane = laneVal;
         }
 
-        // 3. KIRIM DATA LENGKAP KEMBALI KE SERVER
-        await fetch('/api/matchdata', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(fullData)
-        });
+        // 3. KIRIM DATA LENGKAP KEMBALI KE FIREBASE
+        await db.ref('matchdata').set(fullData);
 
     } catch (error) {
-        console.error("Gagal menyimpan data (Save Error):", error);
+        console.error("Gagal menyimpan data ke Firebase (Save Error):", error);
     }
 }
+
 
 // --- EVENT HANDLERS ---
 
