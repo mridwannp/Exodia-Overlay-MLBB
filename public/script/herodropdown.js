@@ -209,8 +209,8 @@ async function loadHeroes() {
 async function initializePage() {
     allHeroes = await loadHeroes();
     
-    // Connect WS akan handle fetch data awal juga
-    connectWebSocket(); 
+    // Fetch data awal dari Firebase
+    fetchDraftData(); 
 
     // Setup Listeners
     for (let i = 1; i <= 20; i++) {
