@@ -34,16 +34,21 @@ async function loadFromServer() {
         // Tampilkan logo di preview dropdown baru jika ada
         if (currentBlueLogo) showLogoPreview(1, currentBlueLogo);
 
-        // Player Name & Lane Biru (Index 3-7)
+        // Player Name, Lane & Photo Biru (Index 3-7)
         for(let i=0; i<5; i++) {
             // Load Nama
             const playerName = (blue.playerlist && blue.playerlist[i]) ? blue.playerlist[i].name : "";
             document.getElementById(`name-input-${3+i}`).value = playerName;
             
-            // Load Lane (NEW) - Default 'none'
+            // Load Lane - Default 'none'
             const playerLane = (blue.playerlist && blue.playerlist[i]) ? blue.playerlist[i].lane : "none";
             const laneSelect = document.getElementById(`lane-select-${3+i}`);
             if (laneSelect) laneSelect.value = playerLane;
+
+            // Load Photo
+            const playerPhoto = (blue.playerlist && blue.playerlist[i]) ? blue.playerlist[i].photo : "";
+            const photoInput = document.getElementById(`player-search-${3+i}`);
+            if (photoInput) photoInput.value = playerPhoto || "";
         }
 
         // --- LOAD RED TEAM (Nama, Skor, Logo) ---
@@ -54,16 +59,21 @@ async function loadFromServer() {
         // Tampilkan logo di preview dropdown baru jika ada
         if (currentRedLogo) showLogoPreview(2, currentRedLogo);
 
-        // Player Name & Lane Merah (Index 10-14)
+        // Player Name, Lane & Photo Merah (Index 10-14)
         for(let i=0; i<5; i++) {
             // Load Nama
             const playerName = (red.playerlist && red.playerlist[i]) ? red.playerlist[i].name : "";
             document.getElementById(`name-input-${10+i}`).value = playerName;
 
-            // Load Lane (NEW) - Default 'none'
+            // Load Lane - Default 'none'
             const playerLane = (red.playerlist && red.playerlist[i]) ? red.playerlist[i].lane : "none";
             const laneSelect = document.getElementById(`lane-select-${10+i}`);
             if (laneSelect) laneSelect.value = playerLane;
+
+            // Load Photo
+            const playerPhoto = (red.playerlist && red.playerlist[i]) ? red.playerlist[i].photo : "";
+            const photoInput = document.getElementById(`player-search-${10+i}`);
+            if (photoInput) photoInput.value = playerPhoto || "";
         }
 
     } catch (error) {
@@ -90,16 +100,22 @@ async function saveToServer() {
         fullData.teamdata.blueteam.score = document.getElementById('name-input-2').value;
         fullData.teamdata.blueteam.logo = currentBlueLogo; 
 
-        // Update Player Names & Lanes Biru
+        // Update Player Names, Lanes & Photos Biru
         for(let i=0; i<5; i++) {
             if (!fullData.teamdata.blueteam.playerlist[i]) fullData.teamdata.blueteam.playerlist[i] = {}; 
             
             // Simpan Nama
             fullData.teamdata.blueteam.playerlist[i].name = document.getElementById(`name-input-${3+i}`).value;
             
-            // Simpan Lane (NEW)
+            // Simpan Lane
             const laneVal = document.getElementById(`lane-select-${3+i}`).value;
             fullData.teamdata.blueteam.playerlist[i].lane = laneVal;
+
+            // Simpan Photo
+            const photoInput = document.getElementById(`player-search-${3+i}`);
+            if (photoInput) {
+                fullData.teamdata.blueteam.playerlist[i].photo = photoInput.value;
+            }
         }
 
         // --- Update Red Team ---
@@ -107,16 +123,22 @@ async function saveToServer() {
         fullData.teamdata.redteam.score = document.getElementById('name-input-9').value;
         fullData.teamdata.redteam.logo = currentRedLogo;
 
-        // Update Player Names & Lanes Merah
+        // Update Player Names, Lanes & Photos Merah
         for(let i=0; i<5; i++) {
             if (!fullData.teamdata.redteam.playerlist[i]) fullData.teamdata.redteam.playerlist[i] = {}; 
             
             // Simpan Nama
             fullData.teamdata.redteam.playerlist[i].name = document.getElementById(`name-input-${10+i}`).value;
 
-            // Simpan Lane (NEW)
+            // Simpan Lane
             const laneVal = document.getElementById(`lane-select-${10+i}`).value;
             fullData.teamdata.redteam.playerlist[i].lane = laneVal;
+
+            // Simpan Photo
+            const photoInput = document.getElementById(`player-search-${10+i}`);
+            if (photoInput) {
+                fullData.teamdata.redteam.playerlist[i].photo = photoInput.value;
+            }
         }
 
         // 3. KIRIM DATA LENGKAP KEMBALI KE FIREBASE
@@ -334,10 +356,13 @@ async function savePlayerPhoto(inputIndex, photoName) {
 // --- LOGIKA TOMBOL (Reset, Switch, Swap) ---
 
 async function resetNames() {
-    // 1. Reset Nama
+    // 1. Reset Nama & Photo
     for (let i = 1; i <= 14; i++) {
         const input = document.getElementById(`name-input-${i}`);
         if(input) input.value = "";
+
+        const photoInput = document.getElementById(`player-search-${i}`);
+        if(photoInput) photoInput.value = "";
     }
 
     // 2. Reset Lane ke 'none'
@@ -359,26 +384,34 @@ async function resetImages() {
 }
 
 async function switchNames() {
-    // 1. Ambil nilai UI saat ini (lokal) - Nama & Score
+    // 1. Ambil nilai UI saat ini (lokal) - Nama & Score & Photo
     let blueTeamName = document.getElementById('name-input-1').value;
     let blueScore = document.getElementById('name-input-2').value;
     
-    // Ambil Player & Lane Biru
+    // Ambil Player & Lane & Photo Biru
     let bluePlayers = [];
     let blueLanes = [];
+    let bluePhotos = [];
     for(let i=3; i<=7; i++) {
         bluePlayers.push(document.getElementById(`name-input-${i}`).value);
         blueLanes.push(document.getElementById(`lane-select-${i}`).value);
+        
+        const photoInput = document.getElementById(`player-search-${i}`);
+        bluePhotos.push(photoInput ? photoInput.value : "");
     }
 
-    // Ambil Player & Lane Merah
+    // Ambil Player & Lane & Photo Merah
     let redTeamName = document.getElementById('name-input-8').value;
     let redScore = document.getElementById('name-input-9').value;
     let redPlayers = [];
     let redLanes = [];
+    let redPhotos = [];
     for(let i=10; i<=14; i++) {
         redPlayers.push(document.getElementById(`name-input-${i}`).value);
         redLanes.push(document.getElementById(`lane-select-${i}`).value);
+
+        const photoInput = document.getElementById(`player-search-${i}`);
+        redPhotos.push(photoInput ? photoInput.value : "");
     }
 
     // 2. Tukar Nilai di UI
@@ -388,6 +421,9 @@ async function switchNames() {
     for(let i=0; i<5; i++) {
         document.getElementById(`name-input-${3+i}`).value = redPlayers[i];
         document.getElementById(`lane-select-${3+i}`).value = redLanes[i];
+        
+        const photoInput = document.getElementById(`player-search-${3+i}`);
+        if(photoInput) photoInput.value = redPhotos[i];
     }
 
     // Set Sisi Merah dengan data Biru
@@ -396,6 +432,9 @@ async function switchNames() {
     for(let i=0; i<5; i++) {
         document.getElementById(`name-input-${10+i}`).value = bluePlayers[i];
         document.getElementById(`lane-select-${10+i}`).value = blueLanes[i];
+
+        const photoInput = document.getElementById(`player-search-${10+i}`);
+        if(photoInput) photoInput.value = bluePhotos[i];
     }
 
     // 3. Simpan
@@ -426,12 +465,14 @@ function handleSwapClick(index, button) {
             return;
         }
 
-        // Ambil Elemen Input & Select
+        // Ambil Elemen Input, Select & Photo
         const input1 = document.getElementById(`name-input-${firstSwapSelection.index}`);
         const lane1 = document.getElementById(`lane-select-${firstSwapSelection.index}`);
+        const photo1 = document.getElementById(`player-search-${firstSwapSelection.index}`);
         
         const input2 = document.getElementById(`name-input-${index}`);
         const lane2 = document.getElementById(`lane-select-${index}`);
+        const photo2 = document.getElementById(`player-search-${index}`);
 
         // Swap Nama
         const tempVal = input1.value;
@@ -443,6 +484,13 @@ function handleSwapClick(index, button) {
             const tempLane = lane1.value;
             lane1.value = lane2.value;
             lane2.value = tempLane;
+        }
+
+        // Swap Photo (Pastikan elemen ada sebelum swap)
+        if (photo1 && photo2) {
+            const tempPhoto = photo1.value;
+            photo1.value = photo2.value;
+            photo2.value = tempPhoto;
         }
 
         saveToServer(); 

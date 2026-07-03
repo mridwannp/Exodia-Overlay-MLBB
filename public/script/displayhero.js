@@ -130,6 +130,39 @@ function updateDisplay(newData) {
             }
         }
     }
+
+    // --- Populate ban-under-pick thumbnails ---
+    // Blue bans (map[11..15]) → shown under blue picks (slots 1-5)
+    for (let slot = 1; slot <= 5; slot++) {
+        const banSrc = map[10 + slot]; // map[11] → slot1, map[12] → slot2, ...
+        const underImg = document.getElementById(`ban-under-display-${slot}`);
+        const underBox = document.getElementById(`ban-under-pick-${slot}`);
+        if (underImg && underBox) {
+            if (banSrc) {
+                underImg.src = banSrc;
+                underBox.classList.add('show');
+            } else {
+                underImg.src = '';
+                underBox.classList.remove('show');
+            }
+        }
+    }
+    // Red bans (map[16..20]) → shown under red picks (slots 6-10)
+    for (let slot = 1; slot <= 5; slot++) {
+        const banSrc = map[15 + slot]; // map[16] → red slot1, ...
+        const pickSlot = slot + 5;    // image-box-6 to image-box-10
+        const underImg = document.getElementById(`ban-under-display-${pickSlot}`);
+        const underBox = document.getElementById(`ban-under-pick-${pickSlot}`);
+        if (underImg && underBox) {
+            if (banSrc) {
+                underImg.src = banSrc;
+                underBox.classList.add('show');
+            } else {
+                underImg.src = '';
+                underBox.classList.remove('show');
+            }
+        }
+    }
 }
 
 // --- 4. TIMER & PHASE UI LOGIC ---

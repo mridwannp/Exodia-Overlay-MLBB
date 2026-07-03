@@ -1,15 +1,18 @@
 // postgame.js - Firebase Realtime Edition
 
-// Fungsi untuk mendapatkan path gambar
 function getImagePath(name, type) {
-    if (!name || name === "idle" || name === "") return "";
+    if (!name || name === "idle" || name === "") {
+        if (type === 'hero') return "Assets/HeroPick/idle.png";
+        return "";
+    }
     
     if (type === 'item') {
         return `Assets/Itemandspell/${name}.png`;
     } else if (type === 'spell') {
         return `Assets/Itemandspell/${name}.png`;
     } else if (type === 'hero') {
-        return `Assets/HeroPick/${name}.png`;
+        const normalized = name.toLowerCase().replace(/[\s\-\']/g, "");
+        return `Assets/HeroPick/${normalized}.png`;
     }
     return "";
 }

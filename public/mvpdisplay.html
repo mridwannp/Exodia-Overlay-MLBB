@@ -336,7 +336,8 @@
 
             // Hero image: heroImg sudah berupa nama hero (tanpa path)
             if (mvpData.heroImg && mvpData.heroImg !== '') {
-                heroImg.src = `Assets/HeroPick/${mvpData.heroImg}.png`;
+                const normalizedHero = mvpData.heroImg.toLowerCase().replace(/[\s\-\']/g, "");
+                heroImg.src = `Assets/HeroPick/${normalizedHero}.png`;
             } else {
                 heroImg.src = 'Assets/HeroPick/idle.png';
             }
@@ -359,7 +360,7 @@
             spellContainer.innerHTML = '';
             if (mvpData.stats.SPELL) {
                 const img = document.createElement('img');
-                img.src = `Assets/itemandspell/${mvpData.stats.SPELL}.png`;
+                img.src = `Assets/Itemandspell/${mvpData.stats.SPELL}.png`;
                 img.onerror = () => img.style.display = 'none';
                 spellContainer.appendChild(img);
             }
@@ -371,7 +372,7 @@
                 const itemName = mvpData.stats[`ITEM ${i}`];
                 if(itemName) {
                     const img = document.createElement('img');
-                    img.src = `Assets/itemandspell/${itemName}.png`;
+                    img.src = `Assets/Itemandspell/${itemName}.png`;
                     img.onerror = () => img.style.display = 'none';
                     box.appendChild(img);
                 }
